@@ -21,6 +21,9 @@ const CARD_EMOJIS: Record<CardType, string> = {
   out: "❌",
 };
 
+// ✅ FIX 1: Hardcoded API URL (Bypasses .env issues)
+const API_URL = "https://script.google.com/macros/s/AKfycbzsd4XsCsKCWnFxqPv4VyK6jZ_pEiLhqys9jsDeH4JmNKRhzMsYJgavbXLIX2nlxf5Q/exec";
+
 export default function Wildcard() {
   const { toast } = useToast();
   const [teamInput, setTeamInput] = useState("");
@@ -50,7 +53,7 @@ export default function Wildcard() {
       round3: !!savedRound3,
     });
 
-    // Determine next available round
+    // Determine next available round based on local storage initially
     if (!savedRound2) {
       setCurrentRound(2);
     } else if (!savedRound3) {
@@ -72,51 +75,36 @@ export default function Wildcard() {
       return;
     }
 
-    // Check if API URL is configured
-    if (!import.meta.env.VITE_SHEET_API_URL) {
-      toast({
-        title: "Configuration Error",
-        description: "Google Apps Script API URL not configured. Contact admin.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      // Check if team exists and what rounds have been drawn
-      const response = await fetch(
-        `${import.meta.env.VITE_SHEET_API_URL}?action=check&team=${teamInput}`
-      );
+      // ✅ FIX 2: Use 'verify' action and hardcoded URL
+      const response = await fetch(`${API_URL}?action=verify&teamId=${teamInput}`);
 
-      // Check if response is valid
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        console.error("Failed to parse API response:", parseError);
-        throw new Error("Invalid response from server. Check API configuration.");
-      }
+      const data = await response.json();
 
-      if (!data.success) {
+      if (data.status !== "success") {
         toast({
           title: "Team Not Found",
-          description: "Please verify your team number.",
+          description: "Please verify your team number in the sheet.",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
-      // Determine next round
+      // Check existing data from Sheet
+      const round2Filled = !!data.data.round2;
+      const round3Filled = !!data.data.round3;
+
+      // Determine next round logic
       let nextRound: 2 | 3 | null = null;
-      if (!data.round2_filled) {
+      if (!round2Filled) {
         nextRound = 2;
-      } else if (!data.round3_filled) {
+      } else if (!round3Filled) {
         nextRound = 3;
       }
 
@@ -127,27 +115,29 @@ export default function Wildcard() {
           variant: "destructive",
         });
         setIsLoading(false);
-        return;
+        // Still allow them to see status, but no round set
+        setCurrentRound(null);
+      } else {
+        setCurrentRound(nextRound);
+        toast({
+          title: "Team Verified",
+          description: `Ready for Round ${nextRound}!`,
+        });
       }
 
       // Update local state
       localStorage.setItem("codeArena_teamId", teamInput);
       setIsVerified(true);
-      setCurrentRound(nextRound);
       setDrawnRounds({
-        round2: data.round2_filled,
-        round3: data.round3_filled,
+        round2: round2Filled,
+        round3: round3Filled,
       });
 
-      toast({
-        title: "Team Verified",
-        description: `Ready for Round ${nextRound}!`,
-      });
     } catch (error) {
       console.error("Error verifying team:", error);
       toast({
-        title: "Verification Error",
-        description: "Could not verify team. Please try again.",
+        title: "Connection Error",
+        description: "Please switch to Mobile Data (College WiFi blocks this).",
         variant: "destructive",
       });
     } finally {
@@ -174,37 +164,24 @@ export default function Wildcard() {
 
     // After animation, submit to backend
     try {
-      // Check if API URL is configured
-      if (!import.meta.env.VITE_SHEET_API_URL) {
-        throw new Error("API configuration missing");
+      // ✅ FIX 3: Use GET request with 'save' action
+      let url = `${API_URL}?action=save&teamId=${teamInput}`;
+      
+      if (currentRound === 2) {
+        url += `&round2=${encodeURIComponent(selectedCard.label)}`;
+      } else {
+        url += `&round3=${encodeURIComponent(selectedCard.label)}`;
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SHEET_API_URL}?action=record`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            team: teamInput,
-            round: currentRound,
-            result: selectedCard.label,
-          }),
-        }
-      );
+      const response = await fetch(url); // Default is GET
 
-      // Check if response is valid
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        throw new Error("Invalid response from server");
-      }
+      const data = await response.json();
 
-      if (!data.success) {
+      if (data.status !== "success") {
         throw new Error(data.message || "Failed to record result");
       }
 
@@ -220,11 +197,12 @@ export default function Wildcard() {
         [currentRound === 2 ? "round2" : "round3"]: true,
       }));
 
-      // Determine next round
+      // Determine next round locally for UI update
       if (currentRound === 2 && !drawnRounds.round3) {
-        setCurrentRound(3);
+        // Prepare for next round after a delay
+        // Note: You might want to force them to click "Next Round" button instead
       } else {
-        setCurrentRound(null);
+        // All done
       }
 
       toast({
@@ -235,7 +213,7 @@ export default function Wildcard() {
       console.error("Error recording result:", error);
       toast({
         title: "Recording Error",
-        description: "Could not record your result. Please try again.",
+        description: "Could not record result. Check connection.",
         variant: "destructive",
       });
     } finally {
