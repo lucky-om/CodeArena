@@ -40,7 +40,7 @@ export default function Index() {
                 CODE ARENA
               </h2>
               <p className="text-sm sm:text-base text-neon-cyan/70 font-space-mono">
-                SDJ International College
+              Inferno'26 |  SDJ International College
               </p>
             </div>
 
@@ -105,11 +105,6 @@ export default function Index() {
                 <div className="text-2xl sm:text-3xl font-orbitron glow-text mb-2">3</div>
                 <p className="text-xs text-neon-cyan/70 font-space-mono">Card Types</p>
               </div>
-              <div className="cyber-card p-4">
-                <div className="text-2xl sm:text-3xl font-orbitron glow-text mb-2">100%</div>
-                <p className="text-xs text-neon-cyan/70 font-space-mono">Random</p>
-              </div>
-            </div>
 
             <div className="text-center text-xs text-neon-cyan/50 font-space-mono mt-6 space-y-1">
               <p>🔐 Secure • 📊 Tracked • 🎲 Fair</p>
@@ -122,7 +117,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="border-t border-neon-cyan/30 backdrop-blur-sm text-center py-4">
         <p className="text-xs text-neon-cyan/50 font-space-mono">
-          CODE ARENA © 2026 | SDJ International College
+         INFERNO'26 | CODE ARENA © 2026 | SDJ International College
         </p>
       </footer>
     </div>
