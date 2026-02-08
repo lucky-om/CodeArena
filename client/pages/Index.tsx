@@ -40,7 +40,7 @@ export default function Index() {
                 CODE ARENA
               </h2>
               <p className="text-sm sm:text-base text-neon-cyan/70 font-space-mono">
-              Inferno'26 |  SDJ International College
+               Inferno'26  |  SDJ International College
               </p>
             </div>
 
@@ -64,7 +64,7 @@ export default function Index() {
                     WILDCARD
                   </h3>
                   <p className="text-xs sm:text-sm text-neon-cyan/70 font-space-mono">
-                    Draw your fate
+                    Draw your Wildcard
                   </p>
                 </div>
 
@@ -105,6 +105,11 @@ export default function Index() {
                 <div className="text-2xl sm:text-3xl font-orbitron glow-text mb-2">3</div>
                 <p className="text-xs text-neon-cyan/70 font-space-mono">Card Types</p>
               </div>
+              <div className="cyber-card p-4">
+                <div className="text-2xl sm:text-3xl font-orbitron glow-text mb-2">100%</div>
+                <p className="text-xs text-neon-cyan/70 font-space-mono">Random</p>
+              </div>
+            </div>
 
             <div className="text-center text-xs text-neon-cyan/50 font-space-mono mt-6 space-y-1">
               <p>🔐 Secure • 📊 Tracked • 🎲 Fair</p>
